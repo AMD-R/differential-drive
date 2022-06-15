@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
    wheel_scaler
@@ -33,24 +33,24 @@ def scaleWheel():
     scale = rospy.get_param('distance_scale', 1)
     rospy.loginfo("wheel_scaler scale: %0.2f", scale)
     
-    rospy.Subscriber("lwheel", Int16, lwheelCallback)
-    rospy.Subscriber("rwheel", Int16, rwheelCallback)
-    
     lscaled_pub = rospy.Publisher("lwheel_scaled", Int16, queue_size=10)
     rscaled_pub = rospy.Publisher("rwheel_scaled", Int16, queue_size=10) 
     
-    ### testing sleep CPU usage
-    r = rospy.Rate(50) 
-    while not rospy.is_shutdown:
-        r.sleep()
+    rospy.Subscriber("lwheel", Int16, lwheelCallback, (lscaled_pub, scale))
+    rospy.Subscriber("rwheel", Int16, rwheelCallback, (rscaled_pub, scale))
+
+    # ### testing sleep CPU usage
+    # r = rospy.Rate(50) 
+    # while not rospy.is_shutdown:
+    #     r.sleep()
         
     rospy.spin()
 
-def lwheelCallback(msg):
-    lscaled_pub.publish( msg.data * -1 * scale)
+def lwheelCallback(msg, args):
+    args[0].publish( msg.data * -1 * args[1])
 
-def rwheelCallback(msg):
-    rscaled_pub.publish( msg.data * -1 * scale)
+def rwheelCallback(msg, args):
+    args[0].publish( msg.data * -1 * args[1])
 
 
 if __name__ == '__main__':

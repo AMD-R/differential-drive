@@ -1,22 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
    pid_velocity - takes messages on wheel_vtarget 
       target velocities for the wheels and monitors wheel for feedback
       
-    Copyright (C) 2012 Jon Stephan. 
-     
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import rospy
@@ -25,6 +11,9 @@ import roslib
 from std_msgs.msg import Int16
 from std_msgs.msg import Float32
 from numpy import array
+
+from dynamic_reconfigure.server import Server
+from differential_drive.cfg import DifferentialDriveConfig
 
     
 ######################################################
@@ -40,6 +29,9 @@ class PidVelocity():
         rospy.init_node("pid_velocity")
         self.nodename = rospy.get_name()
         rospy.loginfo("%s started" % self.nodename)
+
+        ### Initialize Dyn Reconfig
+        self.dyn_conf_srv = Server(DifferentialDriveConfig, self.update_params_callback)
         
         ### initialize variables
         self.target = 0
@@ -81,6 +73,12 @@ class PidVelocity():
         self.pub_motor = rospy.Publisher('motor_cmd',Float32, queue_size=10) 
         self.pub_vel = rospy.Publisher('wheel_vel', Float32, queue_size=10)
    
+    def update_params_callback(self, config, level):
+        rospy.loginfo("""Reconfigure Request: {Kp}, {Ki}, {Kd}""".format(**config))
+        self.Kp = config.Kp
+        self.Ki = config.Ki
+        self.Kd = config.Kd
+        return config
         
     #####################################################
     def spin(self):
